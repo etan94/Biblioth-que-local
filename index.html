@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Médiathèque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════ */
+:root {
+  --bg:        #0a0a0f;
+  --surface:   #111118;
+  --card:      #16161f;
+  --border:    #1e1e2e;
+  --border2:   #2a2a3e;
+  --text:      #e8e8f0;
+  --muted:     #6b6b85;
+  --accent:    #ff4757;
+  --accent2:   #ff6b35;
+  --blue:      #4ecdc4;
+  --gold:      #ffd700;
+  --purple:    #a855f7;
+  --green:     #22c55e;
+
+  --serie:     #4ecdc4;
+  --film:      #ff6b35;
+  --anime:     #a855f7;
+
+  --a_voir:    #6b6b85;
+  --en_cours:  #fbbf24;
+  --termine:   #22c55e;
+  --abandonne: #ef4444;
+
+  --radius: 10px;
+  --shadow: 0 8px 32px rgba(0,0,0,.6);
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.app { display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px; min-width: 240px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+}
+.logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.logo h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.logo span { font-size: 11px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; display: block; margin-top: 2px; }
+
+.nav { padding: 16px 12px; flex: 1; }
+.nav-section { margin-bottom: 24px; }
+.nav-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; padding: 0 8px; margin-bottom: 8px; }
+.nav-btn {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 12px;
+  background: none; border: none; border-radius: 8px;
+  color: var(--muted); font-family: var(--font-body); font-size: 14px; font-weight: 500;
+  cursor: pointer; text-align: left;
+  transition: all .2s;
+}
+.nav-btn:hover { background: var(--border); color: var(--text); }
+.nav-btn.active { background: rgba(255,71,87,.12); color: var(--accent); }
+.nav-btn .icon { font-size: 18px; width: 22px; }
+.nav-btn .count {
+  margin-left: auto; font-size: 11px; font-family: var(--font-mono);
+  background: var(--border); color: var(--muted);
+  padding: 2px 7px; border-radius: 10px;
+}
+.nav-btn.active .count { background: rgba(255,71,87,.2); color: var(--accent); }
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+.add-btn {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: var(--radius);
+  color: #fff; font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  cursor: pointer; letter-spacing: .5px;
+  transition: opacity .2s, transform .2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.add-btn:hover { opacity: .88; transform: translateY(-1px); }
+
+/* MAIN */
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+/* TOPBAR */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(10,10,15,.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 28px;
+  display: flex; align-items: center; gap: 16px;
+}
+.page-title { font-family: var(--font-display); font-size: 26px; letter-spacing: 2px; white-space: nowrap; }
+.search-wrap { flex: 1; max-width: 420px; position: relative; }
+.search-wrap input {
+  width: 100%; padding: 10px 16px 10px 42px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 50px; color: var(--text); font-family: var(--font-body); font-size: 14px;
+  outline: none; transition: border-color .2s;
+}
+.search-wrap input:focus { border-color: var(--accent); }
+.search-wrap .si { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 17px; }
+.sort-select {
+  padding: 9px 14px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 13px;
+  outline: none; cursor: pointer;
+}
+.view-toggle { display: flex; gap: 4px; }
+.view-btn {
+  padding: 8px 10px; background: none; border: 1px solid var(--border);
+  border-radius: 7px; color: var(--muted); cursor: pointer; font-size: 16px;
+  transition: all .2s;
+}
+.view-btn.active, .view-btn:hover { background: var(--border); color: var(--text); }
+
+/* CONTENT */
+.content { flex: 1; padding: 24px 28px; }
+
+/* STATUS FILTERS */
+.filters-row { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.filter-chip {
+  padding: 7px 16px; border-radius: 50px;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .18s; white-space: nowrap;
+}
+.filter-chip:hover { border-color: var(--border2); color: var(--text); }
+.filter-chip.active {
+  background: rgba(255,71,87,.15); border-color: var(--accent);
+  color: var(--accent);
+}
+.filter-chip[data-status="en_cours"].active  { background: rgba(251,191,36,.1); border-color: var(--en_cours); color: var(--en_cours); }
+.filter-chip[data-status="termine"].active   { background: rgba(34,197,94,.1); border-color: var(--termine); color: var(--termine); }
+.filter-chip[data-status="abandonne"].active { background: rgba(239,68,68,.1); border-color: var(--abandonne); color: var(--abandonne); }
+
+/* STATS STRIP */
+.stats-strip {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px; margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: transform .2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.stat-card.c-red::before   { background: var(--accent); }
+.stat-card.c-teal::before  { background: var(--serie); }
+.stat-card.c-orange::before{ background: var(--film); }
+.stat-card.c-purple::before{ background: var(--anime); }
+.stat-card.c-gold::before  { background: var(--gold); }
+.stat-card.c-green::before { background: var(--green); }
+.stat-num { font-family: var(--font-display); font-size: 40px; line-height: 1; }
+.stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: .5px; }
+
+/* GRID */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+.media-grid.list-view {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+/* MEDIA CARD */
+.media-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  cursor: pointer; transition: all .22s;
+  position: relative;
+}
+.media-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--border2); }
+.media-card .cover {
+  aspect-ratio: 2/3; background: var(--surface);
+  position: relative; overflow: hidden;
+}
+.media-card .cover img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+.media-card:hover .cover img { transform: scale(1.05); }
+.cover-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px; color: var(--border2);
+  background: linear-gradient(145deg, var(--surface), var(--card));
+}
+.media-card .type-badge {
+  position: absolute; top: 10px; left: 10px;
+  font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 4px;
+}
+.type-badge.serie  { background: rgba(78,205,196,.18); color: var(--serie); border: 1px solid rgba(78,205,196,.3); }
+.type-badge.film   { background: rgba(255,107,53,.18); color: var(--film); border: 1px solid rgba(255,107,53,.3); }
+.type-badge.anime  { background: rgba(168,85,247,.18); color: var(--anime); border: 1px solid rgba(168,85,247,.3); }
+.status-dot {
+  position: absolute; top: 10px; right: 10px;
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 2px solid rgba(0,0,0,.5);
+}
+.status-dot.a_voir   { background: var(--a_voir); }
+.status-dot.en_cours { background: var(--en_cours); }
+.status-dot.termine  { background: var(--termine); }
+.status-dot.abandonne{ background: var(--abandonne); }
+.media-card .info { padding: 12px 14px 14px; }
+.media-card .title { font-size: 14px; font-weight: 600; line-height: 1.3; margin-bottom: 6px; }
+.media-card .meta { font-size: 12px; color: var(--muted); }
+.rating-stars { color: var(--gold); font-size: 11px; margin-top: 4px; }
+.progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+.ep-label { font-size: 11px; color: var(--muted); margin-top: 4px; display: flex; justify-content: space-between; }
+.quick-actions {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.9), transparent);
+  padding: 30px 10px 10px;
+  display: flex; justify-content: center; gap: 6px;
+  opacity: 0; transition: opacity .2s;
+}
+.media-card:hover .quick-actions { opacity: 1; }
+.qa-btn {
+  padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer;
+  font-size: 12px; font-weight: 500; font-family: var(--font-body);
+  transition: transform .15s;
+}
+.qa-btn:hover { transform: scale(1.05); }
+.qa-btn.minus { background: rgba(239,68,68,.8); color: #fff; }
+.qa-btn.plus  { background: rgba(34,197,94,.8); color: #fff; }
+.qa-btn.edit  { background: rgba(255,255,255,.15); color: #fff; }
+
+/* LIST VIEW CARD */
+.media-grid.list-view .media-card { display: flex; align-items: stretch; }
+.media-grid.list-view .cover { aspect-ratio: 2/3; width: 70px; min-width: 70px; flex-shrink: 0; }
+.media-grid.list-view .quick-actions { left: auto; right: 12px; bottom: 50%; transform: translateY(50%); padding: 0; background: none; flex-direction: column; gap: 4px; }
+.media-grid.list-view .media-card:hover .quick-actions { opacity: 1; }
+.media-grid.list-view .info { flex: 1; display: flex; align-items: center; gap: 20px; padding: 12px 90px 12px 16px; flex-wrap: wrap; }
+.media-grid.list-view .title { margin: 0; font-size: 15px; flex: 1; min-width: 150px; }
+.media-grid.list-view .meta { margin: 0; }
+.media-grid.list-view .progress-bar { display: none; }
+.media-grid.list-view .ep-label { margin: 0; font-size: 12px; }
+.media-grid.list-view .type-badge { position: static; margin-bottom: 4px; display: inline-block; }
+.media-grid.list-view .status-dot { position: static; }
+.media-grid.list-view .rating-stars { margin: 0; }
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center; padding: 80px 20px;
+  grid-column: 1/-1;
+}
+.empty-state .icon { font-size: 64px; margin-bottom: 16px; opacity: .4; }
+.empty-state h3 { font-family: var(--font-display); font-size: 24px; letter-spacing: 2px; color: var(--muted); }
+.empty-state p { color: var(--muted); margin-top: 8px; }
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; width: 100%; max-width: 720px; max-height: 90vh;
+  overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,.8);
+  transform: translateY(20px); transition: transform .25s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-header {
+  padding: 24px 28px 0;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+  padding-bottom: 20px; border-bottom: 1px solid var(--border);
+}
+.modal-title { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; }
+.close-btn { background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; padding: 8px 12px; font-size: 18px; transition: all .2s; }
+.close-btn:hover { color: var(--text); border-color: var(--border2); }
+.modal-body { padding: 24px 28px; }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid .full { grid-column: 1/-1; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 12px; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; font-weight: 500; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 14px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 14px;
+  outline: none; transition: border-color .2s;
+  -webkit-appearance: none;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--accent); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.form-group select option { background: var(--card); }
+
+/* Rating picker */
+.star-picker { display: flex; gap: 6px; }
+.star-btn {
+  background: none; border: none; cursor: pointer; font-size: 24px;
+  color: var(--border2); transition: color .15s, transform .15s;
+  padding: 0; line-height: 1;
+}
+.star-btn:hover, .star-btn.on { color: var(--gold); transform: scale(1.2); }
+
+/* Cover preview */
+.cover-preview-wrap { position: relative; }
+.cover-preview { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); display: none; }
+.cover-drop {
+  border: 2px dashed var(--border); border-radius: 8px;
+  padding: 24px; text-align: center; color: var(--muted);
+  cursor: pointer; transition: border-color .2s; font-size: 13px;
+}
+.cover-drop:hover { border-color: var(--accent); color: var(--text); }
+.cover-drop input { display: none; }
+.cover-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.cover-tab {
+  padding: 6px 14px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 6px; font-size: 12px; color: var(--muted); cursor: pointer;
+}
+.cover-tab.active { border-color: var(--accent); color: var(--accent); }
+
+/* MODAL FOOTER */
+.modal-footer {
+  padding: 20px 28px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 10px;
+  position: sticky; bottom: 0; background: var(--surface);
+}
+.btn {
+  padding: 10px 24px; border-radius: 8px; border: none;
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+.btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+.btn-ghost { background: var(--card); border: 1px solid var(--border); color: var(--muted); }
+.btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+.btn-danger { background: rgba(239,68,68,.15); color: #ef4444; border: 1px solid rgba(239,68,68,.3); }
+.btn-danger:hover { background: rgba(239,68,68,.25); }
+
+/* DETAIL MODAL */
+.detail-header {
+  display: flex; gap: 24px; margin-bottom: 24px;
+}
+.detail-cover { width: 140px; min-width: 140px; aspect-ratio: 2/3; border-radius: 10px; overflow: hidden; background: var(--card); }
+.detail-cover img { width: 100%; height: 100%; object-fit: cover; }
+.detail-info { flex: 1; }
+.detail-title { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; line-height: 1.1; margin-bottom: 10px; }
+.detail-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.badge {
+  padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; letter-spacing: .5px;
+}
+.synopsis { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 16px; }
+.detail-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
+.ds { background: var(--card); border-radius: 8px; padding: 12px; text-align: center; }
+.ds-num { font-family: var(--font-display); font-size: 26px; line-height: 1; }
+.ds-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.progress-section { margin-bottom: 20px; }
+.progress-section h4 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.ep-controls { display: flex; align-items: center; gap: 12px; }
+.ep-counter { font-family: var(--font-display); font-size: 32px; color: var(--text); }
+.ep-total { font-size: 14px; color: var(--muted); }
+.ctrl-btn {
+  width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--card); color: var(--text); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .18s;
+}
+.ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+.progress-bar-big { height: 8px; background: var(--border); border-radius: 4px; margin-top: 10px; overflow: hidden; }
+.notes-area { width: 100%; padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 14px; resize: vertical; min-height: 80px; outline: none; }
+
+/* SCAN MODAL */
+.scan-results { max-height: 300px; overflow-y: auto; margin-top: 16px; }
+.scan-file {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; background: var(--card); border-radius: 8px;
+  margin-bottom: 6px; font-size: 13px;
+}
+.scan-file .ext { font-family: var(--font-mono); color: var(--accent); font-size: 11px; background: rgba(255,71,87,.1); padding: 2px 8px; border-radius: 4px; }
+.scan-file .name { flex: 1; color: var(--text); }
+.scan-file .size { color: var(--muted); font-size: 11px; font-family: var(--font-mono); }
+.scan-import-btn {
+  padding: 5px 12px; background: none; border: 1px solid var(--border);
+  border-radius: 5px; color: var(--muted); cursor: pointer; font-size: 12px;
+  transition: all .15s;
+}
+.scan-import-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* TOAST */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--text); box-shadow: var(--shadow);
+  animation: slideIn .25s ease;
+  display: flex; align-items: center; gap: 10px;
+  max-width: 320px;
+}
+.toast.success { border-color: rgba(34,197,94,.4); }
+.toast.error   { border-color: rgba(239,68,68,.4); }
+@keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { to { transform: translateX(120%); opacity: 0; } }
+.toast.out { animation: fadeOut .25s ease forwards; }
+
+/* TAGS */
+.tag {
+  display: inline-block; padding: 3px 10px;
+  background: var(--border); border-radius: 4px;
+  font-size: 11px; color: var(--muted); margin: 2px;
+}
+
+/* LOADING */
+.loading { text-align: center; padding: 60px; color: var(--muted); font-size: 24px; grid-column: 1/-1; }
+
+/* STATS PAGE */
+.stats-page { display: none; }
+.stats-page.active { display: block; }
+.stats-section { margin-bottom: 32px; }
+.stats-section h3 { font-family: var(--font-display); font-size: 18px; letter-spacing: 2px; color: var(--muted); margin-bottom: 16px; }
+.genre-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.genre-name { width: 120px; font-size: 13px; color: var(--muted); text-align: right; }
+.genre-fill-wrap { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.genre-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 4px; }
+.genre-count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); width: 30px; }
+.top-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; margin-bottom: 8px; cursor: pointer; transition: border-color .2s;
+}
+.top-card:hover { border-color: var(--border2); }
+.top-rank { font-family: var(--font-display); font-size: 28px; color: var(--border2); width: 36px; }
+.top-cover { width: 42px; height: 63px; border-radius: 5px; object-fit: cover; background: var(--surface); }
+.top-info { flex: 1; }
+.top-title { font-weight: 600; font-size: 14px; }
+.top-sub { font-size: 12px; color: var(--muted); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { position: fixed; left: -240px; transition: left .3s; }
+  .sidebar.open { left: 0; box-shadow: 4px 0 30px rgba(0,0,0,.6); }
+  .main { margin-left: 0; }
+  .stats-strip { grid-template-columns: repeat(2,1fr); }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .full { grid-column: 1; }
+}
+@media (max-width: 600px) {
+  .topbar { padding: 12px 16px; gap: 10px; }
+  .content { padding: 16px; }
+  .media-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+  .modal { max-width: 100%; border-radius: 16px 16px 0 0; }
+  .modal-overlay { align-items: flex-end; }
+  .detail-header { flex-direction: column; }
+  .detail-stats { grid-template-columns: repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">
+      <h1>MÉDIATHÈQUE</h1>
+      <span>Bibliothèque Locale</span>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section">
+        <div class="nav-label">Navigation</div>
+        <button class="nav-btn active" onclick="setPage('library')" id="nav-library">
+          <span class="icon">🎬</span> Bibliothèque
+          <span class="count" id="cnt-total">0</span>
+        </button>
+        <button class="nav-btn" onclick="setPage('stats')" id="nav-stats">
+          <span class="icon">📊</span> Statistiques
+        </button>
+        <button class="nav-btn" onclick="openScanModal()" id="nav-scan">
+          <span class="icon">🔍</span> Scanner dossier
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Type</div>
+        <button class="nav-btn" onclick="setTypeFilter('all')" id="type-all">
+          <span class="icon">🌐</span> Tout
+          <span class="count" id="cnt-all">0</span>
+        </button>
+        <button class="nav-btn" onclick="setTypeFilter('serie')" id="type-serie">
+          <span class="icon">📺</span> Séries
+          <span class="count" id="cnt-serie">0</span>
+        </button>
+        <button class="nav-btn" onclick="setTypeFilter('film')" id="type-film">
+          <span class="icon">🎞️</span> Films
+          <span class="count" id="cnt-film">0</span>
+        </button>
+        <button class="nav-btn" onclick="setTypeFilter('anime')" id="type-anime">
+          <span class="icon">⛩️</span> Animés
+          <span class="count" id="cnt-anime">0</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="add-btn" onclick="openAddModal()">
+        ＋ Ajouter un média
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">BIBLIOTHÈQUE</div>
+      <div class="search-wrap">
+        <span class="si">🔎</span>
+        <input type="text" id="search-input" placeholder="Rechercher titre, genre..." oninput="onSearch()">
+      </div>
+      <select class="sort-select" id="sort-select" onchange="loadMedia()">
+        <option value="date_desc">Récent d'abord</option>
+        <option value="date_asc">Plus ancien</option>
+        <option value="title_asc">A → Z</option>
+        <option value="title_desc">Z → A</option>
+        <option value="rating_desc">Meilleures notes</option>
+        <option value="progress">Progression</option>
+      </select>
+      <div class="view-toggle">
+        <button class="view-btn active" id="vb-grid" onclick="setView('grid')" title="Grille">⊞</button>
+        <button class="view-btn" id="vb-list" onclick="setView('list')" title="Liste">☰</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- LIBRARY PAGE -->
+      <div id="page-library">
+        <div class="filters-row" id="filters-row">
+          <button class="filter-chip active" data-status="all" onclick="setStatusFilter('all')">Tous</button>
+          <button class="filter-chip" data-status="a_voir" onclick="setStatusFilter('a_voir')">👁 À voir</button>
+          <button class="filter-chip" data-status="en_cours" onclick="setStatusFilter('en_cours')">▶ En cours</button>
+          <button class="filter-chip" data-status="termine" onclick="setStatusFilter('termine')">✓ Terminé</button>
+          <button class="filter-chip" data-status="abandonne" onclick="setStatusFilter('abandonne')">✕ Abandonné</button>
+        </div>
+
+        <div class="stats-strip" id="stats-strip">
+          <div class="stat-card c-red">
+            <div class="stat-num" id="s-total">0</div>
+            <div class="stat-label">TOTAL MÉDIAS</div>
+          </div>
+          <div class="stat-card c-teal">
+            <div class="stat-num" id="s-serie">0</div>
+            <div class="stat-label">SÉRIES</div>
+          </div>
+          <div class="stat-card c-orange">
+            <div class="stat-num" id="s-film">0</div>
+            <div class="stat-label">FILMS</div>
+          </div>
+          <div class="stat-card c-purple">
+            <div class="stat-num" id="s-anime">0</div>
+            <div class="stat-label">ANIMÉS</div>
+          </div>
+          <div class="stat-card c-gold">
+            <div class="stat-num" id="s-eps">0</div>
+            <div class="stat-label">ÉPS VUS</div>
+          </div>
+          <div class="stat-card c-green">
+            <div class="stat-num" id="s-rating">—</div>
+            <div class="stat-label">NOTE MOY.</div>
+          </div>
+        </div>
+
+        <div class="media-grid" id="media-grid">
+          <div class="loading">⟳ Chargement...</div>
+        </div>
+      </div>
+
+      <!-- STATS PAGE -->
+      <div id="page-stats" style="display:none">
+        <div class="stats-section">
+          <h3>RÉPARTITION PAR STATUT</h3>
+          <div class="stats-strip">
+            <div class="stat-card c-red"><div class="stat-num" id="st-av">0</div><div class="stat-label">À VOIR</div></div>
+            <div class="stat-card c-gold"><div class="stat-num" id="st-ec">0</div><div class="stat-label">EN COURS</div></div>
+            <div class="stat-card c-green"><div class="stat-num" id="st-fi">0</div><div class="stat-label">TERMINÉS</div></div>
+            <div class="stat-card" style="border-top:3px solid var(--abandonne)"><div class="stat-num" id="st-ab">0</div><div class="stat-label">ABANDONNÉS</div></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;flex-wrap:wrap">
+          <div class="stats-section">
+            <h3>TOP NOTÉS</h3>
+            <div id="top-rated-list"></div>
+          </div>
+          <div class="stats-section">
+            <h3>GENRES</h3>
+            <div id="genre-list"></div>
+          </div>
+        </div>
+        <div class="stats-section">
+          <h3>AJOUTÉS RÉCEMMENT</h3>
+          <div id="recent-list"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL AJOUT / ÉDITION
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="form-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="form-modal-title">AJOUTER UN MÉDIA</span>
+      <button class="close-btn" onclick="closeFormModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="media-form" onsubmit="submitForm(event)">
+        <div class="form-grid">
+
+          <!-- Cover -->
+          <div class="form-group full">
+            <label>Couverture</label>
+            <div class="cover-tabs">
+              <button type="button" class="cover-tab active" onclick="setCoverTab('upload')">⬆ Fichier local</button>
+              <button type="button" class="cover-tab" onclick="setCoverTab('url')">🔗 URL image</button>
+            </div>
+            <div id="cover-upload-zone">
+              <div class="cover-drop" onclick="document.getElementById('cover-file').click()">
+                📷 Cliquer pour choisir une image ou glisser-déposer
+                <input type="file" id="cover-file" accept="image/*" onchange="previewCover(event)">
+              </div>
+              <img id="cover-preview" class="cover-preview" alt="">
+            </div>
+            <div id="cover-url-zone" style="display:none">
+              <input type="url" id="cover-url-input" placeholder="https://exemple.com/image.jpg" oninput="previewCoverUrl(event)">
+              <img id="cover-url-preview" class="cover-preview" style="margin-top:8px" alt="">
+            </div>
+          </div>
+
+          <!-- Titre -->
+          <div class="form-group full">
+            <label>Titre *</label>
+            <input type="text" id="f-title" placeholder="Titre du média" required>
+          </div>
+
+          <!-- Type + Statut -->
+          <div class="form-group">
+            <label>Type</label>
+            <select id="f-type" onchange="onTypeChange()">
+              <option value="serie">📺 Série</option>
+              <option value="film">🎞️ Film</option>
+              <option value="anime">⛩️ Animé</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Statut</label>
+            <select id="f-status">
+              <option value="a_voir">👁 À voir</option>
+              <option value="en_cours">▶ En cours</option>
+              <option value="termine">✓ Terminé</option>
+              <option value="abandonne">✕ Abandonné</option>
+            </select>
+          </div>
+
+          <!-- Épisodes / Saisons (caché pour films) -->
+          <div class="form-group" id="ep-group">
+            <label>Épisodes totaux</label>
+            <input type="number" id="f-total-eps" placeholder="0" min="0">
+          </div>
+          <div class="form-group" id="ep-watched-group">
+            <label>Épisodes vus</label>
+            <input type="number" id="f-eps-watched" placeholder="0" min="0">
+          </div>
+          <div class="form-group" id="season-group">
+            <label>Saisons totales</label>
+            <input type="number" id="f-seasons" placeholder="1" min="1">
+          </div>
+          <div class="form-group" id="cur-season-group">
+            <label>Saison actuelle</label>
+            <input type="number" id="f-cur-season" placeholder="1" min="1">
+          </div>
+
+          <!-- Note -->
+          <div class="form-group full">
+            <label>Note</label>
+            <div class="star-picker" id="star-picker">
+              <button type="button" class="star-btn" data-v="1">★</button>
+              <button type="button" class="star-btn" data-v="2">★</button>
+              <button type="button" class="star-btn" data-v="3">★</button>
+              <button type="button" class="star-btn" data-v="4">★</button>
+              <button type="button" class="star-btn" data-v="5">★</button>
+              <button type="button" class="star-btn" data-v="6">★</button>
+              <button type="button" class="star-btn" data-v="7">★</button>
+              <button type="button" class="star-btn" data-v="8">★</button>
+              <button type="button" class="star-btn" data-v="9">★</button>
+              <button type="button" class="star-btn" data-v="10">★</button>
+            </div>
+            <input type="hidden" id="f-rating" value="0">
+          </div>
+
+          <!-- Infos -->
+          <div class="form-group">
+            <label>Genre</label>
+            <input type="text" id="f-genre" placeholder="Action, Drame, Sci-Fi...">
+          </div>
+          <div class="form-group">
+            <label>Année</label>
+            <input type="number" id="f-year" placeholder="2024" min="1900" max="2100">
+          </div>
+          <div class="form-group">
+            <label>Studio / Réalisateur</label>
+            <input type="text" id="f-studio" placeholder="Marvel, Netflix...">
+          </div>
+          <div class="form-group">
+            <label>Tags (virgule)</label>
+            <input type="text" id="f-tags" placeholder="favori, à revoir, chef-d'oeuvre">
+          </div>
+
+          <!-- Synopsis -->
+          <div class="form-group full">
+            <label>Synopsis</label>
+            <textarea id="f-synopsis" placeholder="Description, résumé..."></textarea>
+          </div>
+
+          <!-- Chemin local -->
+          <div class="form-group full">
+            <label>📁 Chemin local (optionnel)</label>
+            <input type="text" id="f-localpath" placeholder="C:\Films\Dune (2021) ou /home/user/films/...">
+          </div>
+
+          <!-- Notes perso -->
+          <div class="form-group full">
+            <label>Notes personnelles</label>
+            <textarea id="f-notes" placeholder="Impressions, recommandations..."></textarea>
+          </div>
+
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-danger" id="delete-btn" onclick="deleteMedia()" style="display:none;margin-right:auto">🗑 Supprimer</button>
+      <button type="button" class="btn btn-ghost" onclick="closeFormModal()">Annuler</button>
+      <button type="button" class="btn btn-primary" onclick="submitForm()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL DÉTAIL
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">DÉTAIL</span>
+      <div style="display:flex;gap:8px">
+        <button class="close-btn" onclick="openEditFromDetail()" title="Modifier">✏️</button>
+        <button class="close-btn" onclick="closeDetailModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL SCAN
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="scan-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🔍 SCANNER UN DOSSIER</span>
+      <button class="close-btn" onclick="closeScanModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Chemin du dossier</label>
+        <input type="text" id="scan-path" placeholder="/home/user/Films ou C:\Films">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn btn-primary" onclick="scanFolder()">🔍 Scanner</button>
+        <span id="scan-status" style="color:var(--muted);font-size:13px;line-height:38px"></span>
+      </div>
+      <div id="scan-results" class="scan-results"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeScanModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let currentType   = 'all';
+let currentStatus = 'all';
+let currentView   = 'grid';
+let currentPage   = 'library';
+let editingId     = null;
+let detailId      = null;
+let coverTab      = 'upload';
+let currentRating = 0;
+let searchTimeout = null;
+let statsData     = {};
+
+const API = '';  // même origine
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════ */
+function setPage(p) {
+  currentPage = p;
+  document.getElementById('page-library').style.display = p === 'library' ? '' : 'none';
+  document.getElementById('page-stats').style.display   = p === 'stats'   ? '' : 'none';
+  document.getElementById('sort-select').style.display  = p === 'library' ? '' : 'none';
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + p)?.classList.add('active');
+  const titles = { library: 'BIBLIOTHÈQUE', stats: 'STATISTIQUES' };
+  document.getElementById('page-title').textContent = titles[p] || p.toUpperCase();
+  if (p === 'stats') loadStats();
+}
+
+function setTypeFilter(t) {
+  currentType = t;
+  document.querySelectorAll('[id^="type-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('type-' + t)?.classList.add('active');
+  loadMedia();
+}
+
+function setStatusFilter(s) {
+  currentStatus = s;
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.status === s);
+  });
+  loadMedia();
+}
+
+function setView(v) {
+  currentView = v;
+  const grid = document.getElementById('media-grid');
+  grid.classList.toggle('list-view', v === 'list');
+  document.getElementById('vb-grid').classList.toggle('active', v === 'grid');
+  document.getElementById('vb-list').classList.toggle('active', v === 'list');
+}
+
+function onSearch() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(loadMedia, 300);
+}
+
+/* ═══════════════════════════════════════════════
+   LOAD MEDIA
+═══════════════════════════════════════════════ */
+async function loadMedia() {
+  const grid = document.getElementById('media-grid');
+  grid.innerHTML = '<div class="loading">⟳</div>';
+
+  const params = new URLSearchParams({
+    type:   currentType,
+    status: currentStatus,
+    sort:   document.getElementById('sort-select').value,
+    search: document.getElementById('search-input').value,
+  });
+
+  try {
+    const res  = await fetch(`${API}/api/media?${params}`);
+    const data = await res.json();
+    renderGrid(data);
+    await loadStatsStrip();
+  } catch (e) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><h3>SERVEUR HORS LIGNE</h3><p>Assurez-vous que le serveur Node.js tourne sur le port 3000</p></div>';
+  }
+}
+
+function renderGrid(items) {
+  const grid = document.getElementById('media-grid');
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="icon">${currentType==='anime'?'⛩️':currentType==='film'?'🎞️':'🎬'}</div>
+      <h3>AUCUN RÉSULTAT</h3>
+      <p>Ajoutez votre premier média avec le bouton ci-dessous</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = items.map(m => cardHTML(m)).join('');
+}
+
+function cardHTML(m) {
+  const pct    = m.totalEpisodes > 0 ? Math.round(m.episodesWatched / m.totalEpisodes * 100) : 0;
+  const color  = { serie: 'var(--serie)', film: 'var(--film)', anime: 'var(--anime)' }[m.type] || 'var(--accent)';
+  const stars  = m.rating > 0 ? '★'.repeat(Math.round(m.rating/2)) + '☆'.repeat(5-Math.round(m.rating/2)) : '';
+  const imgSrc = m.cover || m.coverUrl;
+  const isFilm = m.type === 'film';
+
+  return `<div class="media-card" onclick="openDetail('${m.id}')">
+    <div class="cover">
+      ${imgSrc
+        ? `<img src="${imgSrc}" alt="${esc(m.title)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : ''}
+      <div class="cover-placeholder" style="${imgSrc?'display:none':''}">
+        ${ {serie:'📺', film:'🎞️', anime:'⛩️'}[m.type] }
+      </div>
+      <span class="type-badge ${m.type}">${{serie:'Série',film:'Film',anime:'Animé'}[m.type]}</span>
+      <span class="status-dot ${m.status}" title="${statusLabel(m.status)}"></span>
+      <div class="quick-actions">
+        ${!isFilm?`<button class="qa-btn minus" onclick="quickProg(event,'${m.id}',-1)">−1</button>`:''}
+        <button class="qa-btn edit" onclick="event.stopPropagation();openEdit('${m.id}')">✏️</button>
+        ${!isFilm?`<button class="qa-btn plus"  onclick="quickProg(event,'${m.id}',+1)">+1</button>`:''}
+      </div>
+    </div>
+    <div class="info">
+      <div class="title">${esc(m.title)}</div>
+      <div class="meta">${m.year||''}${m.year&&m.genre?' · ':''}${m.genre||''}</div>
+      ${stars ? `<div class="rating-stars">${stars} <span style="color:var(--muted);font-size:10px">${m.rating}/10</span></div>` : ''}
+      ${!isFilm ? `
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="ep-label">
+          <span>${m.episodesWatched} / ${m.totalEpisodes||'?'} éps</span>
+          <span>${pct}%</span>
+        </div>` : ''}
+    </div>
+  </div>`;
+}
+
+function statusLabel(s) {
+  return { a_voir:'À voir', en_cours:'En cours', termine:'Terminé', abandonne:'Abandonné' }[s] || s;
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ═══════════════════════════════════════════════
+   STATS STRIP
+═══════════════════════════════════════════════ */
+async function loadStatsStrip() {
+  try {
+    const r = await fetch(`${API}/api/stats`);
+    const s = await r.json();
+    statsData = s;
+    document.getElementById('s-total').textContent  = s.total;
+    document.getElementById('s-serie').textContent  = s.series;
+    document.getElementById('s-film').textContent   = s.films;
+    document.getElementById('s-anime').textContent  = s.animes;
+    document.getElementById('s-eps').textContent    = s.totalEpisodes;
+    document.getElementById('s-rating').textContent = s.avgRating > 0 ? s.avgRating : '—';
+    document.getElementById('cnt-total').textContent = s.total;
+    document.getElementById('cnt-all').textContent   = s.total;
+    document.getElementById('cnt-serie').textContent = s.series;
+    document.getElementById('cnt-film').textContent  = s.films;
+    document.getElementById('cnt-anime').textContent = s.animes;
+  } catch {}
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch(`${API}/api/stats`);
+    const s = await r.json();
+    statsData = s;
+    document.getElementById('st-av').textContent = s.a_voir;
+    document.getElementById('st-ec').textContent = s.en_cours;
+    document.getElementById('st-fi').textContent = s.termine;
+    document.getElementById('st-ab').textContent = s.abandonne;
+
+    // Top rated
+    const trl = document.getElementById('top-rated-list');
+    trl.innerHTML = (s.topRated||[]).map((m,i) => {
+      const img = m.cover || m.coverUrl;
+      return `<div class="top-card" onclick="openDetail('${m.id}')">
+        <div class="top-rank">${i+1}</div>
+        ${img ? `<img class="top-cover" src="${img}" alt="">` : `<div class="top-cover" style="display:flex;align-items:center;justify-content:center;font-size:20px">${{serie:'📺',film:'🎞️',anime:'⛩️'}[m.type]}</div>`}
+        <div class="top-info">
+          <div class="top-title">${esc(m.title)}</div>
+          <div class="top-sub" style="color:var(--gold)">★ ${m.rating}/10</div>
+        </div>
+      </div>`;
+    }).join('') || '<p style="color:var(--muted)">Aucune note encore</p>';
+
+    // Genres
+    const genres = Object.entries(s.genres||{}).sort((a,b)=>b[1]-a[1]);
+    const maxG   = genres[0]?.[1] || 1;
+    document.getElementById('genre-list').innerHTML = genres.slice(0,10).map(([g,c]) =>
+      `<div class="genre-bar">
+        <div class="genre-name">${esc(g)}</div>
+        <div class="genre-fill-wrap"><div class="genre-fill" style="width:${c/maxG*100}%"></div></div>
+        <div class="genre-count">${c}</div>
+      </div>`
+    ).join('') || '<p style="color:var(--muted)">Aucun genre renseigné</p>';
+
+    // Recent
+    const rl = document.getElementById('recent-list');
+    rl.innerHTML = (s.recentlyAdded||[]).map(m => {
+      const img = m.cover || m.coverUrl;
+      return `<div class="top-card" onclick="openDetail('${m.id}')">
+        ${img ? `<img class="top-cover" src="${img}" alt="">` : `<div class="top-cover" style="display:flex;align-items:center;justify-content:center;font-size:20px">${{serie:'📺',film:'🎞️',anime:'⛩️'}[m.type]}</div>`}
+        <div class="top-info">
+          <div class="top-title">${esc(m.title)}</div>
+          <div class="top-sub">${new Date(m.addedAt).toLocaleDateString('fr-FR')} · <span class="type-badge ${m.type}" style="position:static;display:inline">${{serie:'Série',film:'Film',anime:'Animé'}[m.type]}</span></div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch {}
+}
+
+/* ═══════════════════════════════════════════════
+   FORM MODAL
+═══════════════════════════════════════════════ */
+function openAddModal() {
+  editingId = null;
+  resetForm();
+  document.getElementById('form-modal-title').textContent = 'AJOUTER UN MÉDIA';
+  document.getElementById('delete-btn').style.display = 'none';
+  openOverlay('form-modal');
+}
+
+async function openEdit(id) {
+  editingId = id;
+  resetForm();
+  document.getElementById('form-modal-title').textContent = 'MODIFIER';
+  document.getElementById('delete-btn').style.display = '';
+
+  try {
+    const r = await fetch(`${API}/api/media/${id}`);
+    const m = await r.json();
+    document.getElementById('f-title').value       = m.title || '';
+    document.getElementById('f-type').value        = m.type  || 'serie';
+    document.getElementById('f-status').value      = m.status|| 'a_voir';
+    document.getElementById('f-total-eps').value   = m.totalEpisodes   || '';
+    document.getElementById('f-eps-watched').value = m.episodesWatched || '';
+    document.getElementById('f-seasons').value     = m.totalSeasons    || '';
+    document.getElementById('f-cur-season').value  = m.currentSeason   || '';
+    document.getElementById('f-genre').value       = m.genre   || '';
+    document.getElementById('f-year').value        = m.year    || '';
+    document.getElementById('f-studio').value      = m.studio  || '';
+    document.getElementById('f-tags').value        = (m.tags||[]).join(', ');
+    document.getElementById('f-synopsis').value    = m.synopsis|| '';
+    document.getElementById('f-localpath').value   = m.localPath|| '';
+    document.getElementById('f-notes').value       = m.notes   || '';
+    if (m.coverUrl) {
+      document.getElementById('cover-url-input').value = m.coverUrl;
+      previewCoverUrl({ target: { value: m.coverUrl } });
+      setCoverTab('url');
+    }
+    if (m.cover) {
+      const p = document.getElementById('cover-preview');
+      p.src = m.cover; p.style.display = 'block';
+    }
+    setRating(m.rating || 0);
+    onTypeChange();
+    openOverlay('form-modal');
+  } catch (e) { toast('Erreur chargement', 'error'); }
+}
+
+function openEditFromDetail() {
+  if (detailId) { closeDetailModal(); openEdit(detailId); }
+}
+
+function closeFormModal() { closeOverlay('form-modal'); editingId = null; }
+
+function resetForm() {
+  document.getElementById('media-form').reset();
+  document.getElementById('cover-preview').style.display = 'none';
+  document.getElementById('cover-preview').src = '';
+  document.getElementById('cover-url-preview').style.display = 'none';
+  document.getElementById('cover-url-input').value = '';
+  setRating(0);
+  setCoverTab('upload');
+  onTypeChange();
+}
+
+function onTypeChange() {
+  const t = document.getElementById('f-type').value;
+  const hide = t === 'film';
+  ['ep-group','ep-watched-group','season-group','cur-season-group'].forEach(id => {
+    document.getElementById(id).style.display = hide ? 'none' : '';
+  });
+}
+
+function setCoverTab(tab) {
+  coverTab = tab;
+  document.getElementById('cover-upload-zone').style.display = tab === 'upload' ? '' : 'none';
+  document.getElementById('cover-url-zone').style.display    = tab === 'url'    ? '' : 'none';
+  document.querySelectorAll('.cover-tab').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='upload')||(i===1&&tab==='url')));
+}
+
+function previewCover(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const p = document.getElementById('cover-preview');
+  p.src = URL.createObjectURL(file); p.style.display = 'block';
+}
+
+function previewCoverUrl(e) {
+  const url = e.target?.value || e;
+  const p = document.getElementById('cover-url-preview');
+  if (url) { p.src = url; p.style.display = 'block'; p.onerror = ()=>p.style.display='none'; }
+  else p.style.display = 'none';
+}
+
+/* Star rating */
+function setRating(v) {
+  currentRating = v;
+  document.getElementById('f-rating').value = v;
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.toggle('on', parseInt(b.dataset.v) <= v));
+}
+document.getElementById('star-picker').addEventListener('click', e => {
+  const b = e.target.closest('.star-btn');
+  if (b) setRating(parseInt(b.dataset.v));
+});
+document.getElementById('star-picker').addEventListener('mouseover', e => {
+  const b = e.target.closest('.star-btn');
+  if (b) document.querySelectorAll('.star-btn').forEach(s => s.classList.toggle('on', parseInt(s.dataset.v) <= parseInt(b.dataset.v)));
+});
+document.getElementById('star-picker').addEventListener('mouseleave', () => setRating(currentRating));
+
+/* SUBMIT */
+async function submitForm(e) {
+  if (e) e.preventDefault();
+  const fd = new FormData();
+
+  const fields = { title:'f-title', type:'f-type', status:'f-status',
+    totalEpisodes:'f-total-eps', episodesWatched:'f-eps-watched',
+    totalSeasons:'f-seasons', currentSeason:'f-cur-season',
+    genre:'f-genre', year:'f-year', studio:'f-studio',
+    tags:'f-tags', synopsis:'f-synopsis', localPath:'f-localpath', notes:'f-notes' };
+
+  for (const [k,id] of Object.entries(fields)) {
+    fd.append(k, document.getElementById(id).value || '');
+  }
+  fd.append('rating', currentRating);
+
+  if (coverTab === 'upload') {
+    const file = document.getElementById('cover-file').files[0];
+    if (file) fd.append('cover', file);
+  } else {
+    fd.append('coverUrl', document.getElementById('cover-url-input').value || '');
+  }
+
+  if (!fd.get('title')) { toast('Le titre est obligatoire', 'error'); return; }
+
+  try {
+    const method = editingId ? 'PUT' : 'POST';
+    const url    = editingId ? `${API}/api/media/${editingId}` : `${API}/api/media`;
+    const res    = await fetch(url, { method, body: fd });
+    if (!res.ok) throw new Error();
+    toast(editingId ? '✏️ Média modifié' : '✅ Média ajouté');
+    closeFormModal();
+    loadMedia();
+  } catch { toast('Erreur lors de la sauvegarde', 'error'); }
+}
+
+async function deleteMedia() {
+  if (!editingId) return;
+  if (!confirm('Supprimer ce média ?')) return;
+  try {
+    await fetch(`${API}/api/media/${editingId}`, { method: 'DELETE' });
+    toast('🗑 Supprimé');
+    closeFormModal();
+    if (detailId === editingId) closeDetailModal();
+    loadMedia();
+  } catch { toast('Erreur suppression', 'error'); }
+}
+
+/* ═══════════════════════════════════════════════
+   DETAIL MODAL
+═══════════════════════════════════════════════ */
+async function openDetail(id) {
+  detailId = id;
+  try {
+    const r = await fetch(`${API}/api/media/${id}`);
+    const m = await r.json();
+    renderDetail(m);
+    openOverlay('detail-modal');
+  } catch { toast('Erreur', 'error'); }
+}
+
+function renderDetail(m) {
+  const pct    = m.totalEpisodes > 0 ? Math.round(m.episodesWatched / m.totalEpisodes * 100) : 0;
+  const color  = { serie: 'var(--serie)', film: 'var(--film)', anime: 'var(--anime)' }[m.type] || 'var(--accent)';
+  const imgSrc = m.cover || m.coverUrl;
+  const stars  = m.rating > 0 ? '★'.repeat(Math.round(m.rating/2))+'☆'.repeat(5-Math.round(m.rating/2)) : '—';
+  const isFilm = m.type === 'film';
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-header">
+      <div class="detail-cover">
+        ${imgSrc
+          ? `<img src="${imgSrc}" alt="${esc(m.title)}">`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px">${{serie:'📺',film:'🎞️',anime:'⛩️'}[m.type]}</div>`}
+      </div>
+      <div class="detail-info">
+        <div class="detail-title">${esc(m.title)}</div>
+        <div class="detail-badges">
+          <span class="badge type-badge ${m.type}">${{serie:'Série',film:'Film',anime:'Animé'}[m.type]}</span>
+          <span class="badge" style="background:var(--card);border:1px solid var(--border);color:var(--muted)">${statusLabel(m.status)}</span>
+          ${m.year?`<span class="badge" style="background:var(--card);border:1px solid var(--border);color:var(--muted)">${m.year}</span>`:''}
+          ${m.genre?`<span class="badge" style="background:var(--card);border:1px solid var(--border);color:var(--muted)">${esc(m.genre)}</span>`:''}
+        </div>
+        ${m.synopsis?`<div class="synopsis">${esc(m.synopsis)}</div>`:''}
+        <div class="detail-stats">
+          <div class="ds"><div class="ds-num" style="color:var(--gold)">${m.rating||'—'}</div><div class="ds-label">/ 10</div></div>
+          ${!isFilm?`
+          <div class="ds"><div class="ds-num" style="color:${color}">${m.episodesWatched}</div><div class="ds-label">ÉPS VUS</div></div>
+          <div class="ds"><div class="ds-num">${m.totalEpisodes||'?'}</div><div class="ds-label">TOTAL ÉPS</div></div>
+          `:`<div class="ds"><div class="ds-num" style="font-size:24px">🎬</div><div class="ds-label">FILM</div></div><div class="ds"></div>`}
+        </div>
+        ${m.studio?`<div style="font-size:13px;color:var(--muted)">🎬 ${esc(m.studio)}</div>`:''}
+        ${m.tags?.length?`<div style="margin-top:8px">${m.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
+      </div>
+    </div>
+
+    ${!isFilm ? `
+    <div class="progress-section">
+      <h4>Progression</h4>
+      <div class="ep-controls">
+        <button class="ctrl-btn" onclick="detailProgress(-1)">−</button>
+        <div>
+          <span class="ep-counter" id="d-ep-count">${m.episodesWatched}</span>
+          <span class="ep-total"> / ${m.totalEpisodes||'?'} épisodes</span>
+        </div>
+        <button class="ctrl-btn" onclick="detailProgress(+1)">+</button>
+        <span style="color:var(--muted);font-size:13px;margin-left:8px">S${m.currentSeason||1}</span>
+      </div>
+      <div class="progress-bar-big">
+        <div id="d-prog-fill" class="progress-fill" style="width:${pct}%;background:${color}"></div>
+      </div>
+    </div>` : ''}
+
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Statut</label>
+      <select class="sort-select" id="d-status" onchange="detailStatus(this.value)" style="width:100%;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none">
+        <option value="a_voir"   ${m.status==='a_voir'   ?'selected':''}>👁 À voir</option>
+        <option value="en_cours" ${m.status==='en_cours' ?'selected':''}>▶ En cours</option>
+        <option value="termine"  ${m.status==='termine'  ?'selected':''}>✓ Terminé</option>
+        <option value="abandonne"${m.status==='abandonne'?'selected':''}>✕ Abandonné</option>
+      </select>
+    </div>
+
+    ${m.notes ? `<div style="margin-bottom:16px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Notes</div>
+      <div style="background:var(--card);border-radius:8px;padding:12px;font-size:14px;color:var(--muted)">${esc(m.notes)}</div>
+    </div>` : ''}
+
+    ${m.localPath ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">📁 ${esc(m.localPath)}</div>` : ''}
+    <div style="font-size:11px;color:var(--border2);margin-top:12px">Ajouté le ${new Date(m.addedAt).toLocaleDateString('fr-FR')}</div>
+  `;
+}
+
+async function detailProgress(delta) {
+  try {
+    const r = await fetch(`${API}/api/media/${detailId}/progress`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ delta })
+    });
+    const m = await r.json();
+    document.getElementById('d-ep-count').textContent = m.episodesWatched;
+    const pct = m.totalEpisodes > 0 ? Math.round(m.episodesWatched / m.totalEpisodes * 100) : 0;
+    const fill = document.getElementById('d-prog-fill');
+    if (fill) fill.style.width = pct + '%';
+    loadMedia();
+  } catch {}
+}
+
+async function detailStatus(status) {
+  try {
+    await fetch(`${API}/api/media/${detailId}/progress`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    loadMedia();
+  } catch {}
+}
+
+function closeDetailModal() { closeOverlay('detail-modal'); detailId = null; }
+
+/* QUICK PROGRESS (depuis la grille) */
+async function quickProg(e, id, delta) {
+  e.stopPropagation();
+  try {
+    await fetch(`${API}/api/media/${id}/progress`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ delta })
+    });
+    loadMedia();
+  } catch {}
+}
+
+/* ═══════════════════════════════════════════════
+   SCAN MODAL
+═══════════════════════════════════════════════ */
+function openScanModal()  { openOverlay('scan-modal'); }
+function closeScanModal() { closeOverlay('scan-modal'); }
+
+async function scanFolder() {
+  const path = document.getElementById('scan-path').value.trim();
+  if (!path) { toast('Entrez un chemin de dossier', 'error'); return; }
+  document.getElementById('scan-status').textContent = '⟳ Scan en cours...';
+  document.getElementById('scan-results').innerHTML = '';
+  try {
+    const r = await fetch(`${API}/api/scan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folderPath: path })
+    });
+    const d = await r.json();
+    document.getElementById('scan-status').textContent = `${d.count} fichier(s) trouvé(s)`;
+    document.getElementById('scan-results').innerHTML = d.files.map(f =>
+      `<div class="scan-file">
+        <span class="ext">${f.ext}</span>
+        <span class="name">${esc(f.name)}</span>
+        <span class="size">${(f.size/1024/1024).toFixed(1)} Mo</span>
+        <button class="scan-import-btn" onclick="importScanFile('${esc(f.name)}','${esc(f.path)}')">+ Ajouter</button>
+      </div>`
+    ).join('') || '<p style="color:var(--muted);padding:16px">Aucun fichier vidéo trouvé</p>';
+  } catch (e) {
+    document.getElementById('scan-status').textContent = 'Erreur : ' + e.message;
+  }
+}
+
+function importScanFile(name, fpath) {
+  closeScanModal();
+  resetForm();
+  document.getElementById('f-title').value     = name;
+  document.getElementById('f-localpath').value = fpath;
+  document.getElementById('form-modal-title').textContent = 'AJOUTER UN MÉDIA';
+  document.getElementById('delete-btn').style.display = 'none';
+  editingId = null;
+  openOverlay('form-modal');
+}
+
+/* ═══════════════════════════════════════════════
+   OVERLAY HELPERS
+═══════════════════════════════════════════════ */
+function openOverlay(id)  { document.getElementById(id).classList.add('open'); }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) { o.classList.remove('open'); } });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(o => o.classList.remove('open'));
+});
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+function toast(msg, type = 'success') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${type==='success'?'✅':'⚠️'}</span> ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+/* ═══════════════════════════════════════════════
+   DRAG & DROP COVER
+═══════════════════════════════════════════════ */
+const dropZone = document.querySelector('.cover-drop');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+dropZone.addEventListener('dragleave', () => dropZone.style.borderColor = '');
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('cover-file').files = dt.files;
+    previewCover({ target: { files: [file] } });
+  }
+});
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+loadMedia();
+</script>
+</body>
+</html>
